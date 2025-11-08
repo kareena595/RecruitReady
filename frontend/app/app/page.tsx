@@ -30,9 +30,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-row w-[90vw] h-[90vh] bg-[#1e1e1e] rounded-[10px] shadow-[0_0_25px_rgba(0,0,0,0.8)] p-5">
+    <div className="flex flex-row w-[90vw] h-[90vh] bg-[#1e1e1e] rounded-[10px] shadow-[0_0_px_rgba(0,0,0,0.2)] p-5 bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900">
       <div className="flex-[3] flex flex-col justify-center items-center relative pr-5">
-        <h1 className="font-light m-0 mb-5 tracking-[2px]">Live Video Stream</h1>
+        <h1 className="font-light m-0 mb-5 tracking-[2px]">
+          Live Video Stream
+        </h1>
 
         <img
           id="video-stream"
@@ -41,16 +43,16 @@ export default function HomePage() {
           className="max-h-[85%] rounded-lg object-cover transition-transform duration-300"
         />
 
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2">
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex">
           <button
             onClick={zoomIn}
-            className="w-[50px] h-[50px] text-2xl font-bold text-white bg-[#333] border border-[#555] rounded-full mx-2.5 cursor-pointer transition-all duration-200 hover:bg-[#555] active:scale-95 disabled:bg-[#2a2a2a] disabled:border-[#444] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-[#2a2a2a]"
+            className="w-[50px] h-[50px] text-2xl font-bold text-white bg-emerald-500 border border-emerald-600 rounded-full mx-2.5 cursor-pointer transition-all duration-200 hover:bg-emerald-600 active:scale-95 disabled:bg-gray-700 disabled:border-gray-600 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-gray-700 flex items-center justify-center"
           >
             +
           </button>
           <button
             onClick={zoomOut}
-            className="w-[50px] h-[50px] text-2xl font-bold text-white bg-[#333] border border-[#555] rounded-full mx-2.5 cursor-pointer transition-all duration-200 hover:bg-[#555] active:scale-95 disabled:bg-[#2a2a2a] disabled:border-[#444] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-[#2a2a2a]"
+            className="w-[50px] h-[50px] text-2xl font-bold text-white bg-emerald-500 border border-emerald-600 rounded-full mx-2.5 cursor-pointer transition-all duration-200 hover:bg-emerald-600 active:scale-95 disabled:bg-gray-700 disabled:border-gray-600 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-gray-700 flex items-center justify-center"
           >
             -
           </button>

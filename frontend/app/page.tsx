@@ -6,7 +6,10 @@ export default function LandingPage() {
     <main className="min-h-screen min-w-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900 px-6 py-20 text-center">
       {/* Hero Section */}
       <div className="max-w-3xl">
-        <h1 className="text-5xl md:text-6xl text-gray-100 mb-6" style={{ fontWeight: 700 }}>
+        <h1
+          className="text-5xl md:text-6xl text-gray-100 mb-6"
+          style={{ fontWeight: 700 }}
+        >
           Ace Your Interviews with{" "}
           <span className="text-emerald-400">AI-Powered Practice</span>
         </h1>

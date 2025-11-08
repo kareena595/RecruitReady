@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #2d3748;
 }
 
 @theme inline {
@@ -26,14 +26,15 @@ body {
 }
 
 /* Base styles for the app layout */
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background-color: #121212;
-  font-family: 'Roboto', sans-serif;
+  background-color: #2d3748;
+  font-family: "Roboto", sans-serif;
   color: white;
   display: flex;
   justify-content: center;
