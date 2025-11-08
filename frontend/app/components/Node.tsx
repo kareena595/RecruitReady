@@ -12,18 +12,18 @@ export default function Node({ title, content, defaultExpanded = false }: NodePr
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="node-container">
+    <div className="bg-[#2a2a2a] rounded-lg overflow-hidden transition-all duration-300 hover:bg-[#333]">
       <div
-        className="node-header"
+        className="flex justify-between items-center px-5 py-[15px] cursor-pointer select-none"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h3>{title}</h3>
-        <span className="expand-icon">{isExpanded ? "−" : "+"}</span>
+        <h3 className="m-0 text-lg font-medium tracking-[0.5px]">{title}</h3>
+        <span className="text-2xl font-light text-[#888] transition-transform duration-300">{isExpanded ? "−" : "+"}</span>
       </div>
 
       {isExpanded && (
-        <div className="node-content">
-          <p>{content}</p>
+        <div className="px-5 pb-[15px] animate-[slideDown_0.3s_ease]">
+          <p className="m-0 font-['Courier_New',Courier,monospace] bg-[#1e1e1e] p-[15px] rounded-[5px] text-[0.95em] leading-[1.6]">{content}</p>
         </div>
       )}
     </div>
