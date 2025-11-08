@@ -24,3 +24,146 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Find the button:active rule and replace it with this */
+button:active {
+  transform: scale(0.95); /* Only scale down on click, no more translateX */
+}
+
+/* Add this new rule for the disabled state */
+button:disabled {
+  background-color: #2a2a2a; /* Greyed out background */
+  border-color: #444;
+  opacity: 0.6; /* Make it slightly transparent */
+  cursor: not-allowed; /* Show a 'not allowed' cursor on hover */
+}
+
+
+/* --- Full CSS file for context (with changes applied) --- */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #121212;
+  font-family: 'Roboto', sans-serif;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: row;
+  width: 90vw;
+  height: 90vh;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+.video-container {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding-right: 20px;
+  box-sizing: border-box;
+}
+
+h1 {
+  font-weight: 300;
+  margin: 0 0 20px 0;
+  letter-spacing: 2px;
+}
+
+#video-stream {
+  max-height: 85%;
+  border-radius: 8px;
+  object-fit: cover;
+  transition: width 0.3s ease-in-out;
+}
+
+.controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+button {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #333;
+  border: 1px solid #555;
+  border-radius: 50%;
+  margin: 0 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s, opacity 0.2s; /* Added opacity to transition */
+}
+
+button:hover {
+  background-color: #555;
+}
+
+/* CORRECTED ACTIVE STATE */
+button:active {
+  transform: scale(0.95);
+}
+
+/* NEW DISABLED STATE */
+button:disabled {
+  background-color: #2a2a2a;
+  border-color: #444;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  background-color: #2a2a2a; /* Ensure hover doesn't change color when disabled */
+}
+
+
+/* --- Data Container (Right Side) --- */
+.data-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 1px solid #444;
+  padding-left: 20px;
+  box-sizing: border-box;
+}
+
+#info-box {
+  width: 100%;
+  height: 90%;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  padding: 25px;
+  box-sizing: border-box;
+  text-align: left;
+  font-size: 1.1em;
+}
+
+#info-box h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #555;
+  padding-bottom: 10px;
+}
+
+#info-box p {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #1e1e1e;
+  padding: 15px;
+  border-radius: 5px;
+}
