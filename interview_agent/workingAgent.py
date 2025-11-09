@@ -1,6 +1,6 @@
 """
 agent.py - AI Interview Coach using Google's Agent Development Kit (ADK)
-Modified to output separate camera and speech feedback in structured JSON
+Modified to output structured JSON responses with metrics and feedback
 """
 
 from dotenv import load_dotenv
@@ -33,7 +33,7 @@ SESSION_ID = "session_interview_001"
 MODEL_NAME = "gemini-2.0-flash-exp"
 
 # ============================================================================
-# INPUT SCHEMA
+# INPUT SCHEMA - Define what data the agent expects
 # ============================================================================
 
 class InterviewInput(BaseModel):
@@ -45,7 +45,7 @@ class InterviewInput(BaseModel):
 
 
 # ============================================================================
-# TOOL FUNCTIONS
+# TOOL FUNCTIONS - These analyze metrics and return scores/feedback
 # ============================================================================
 
 def analyze_eye_contact(left_iris: float, right_iris: float, maintained: bool, eye_contact_percentage: float) -> dict:
@@ -318,190 +318,143 @@ def _identify_strengths(engagement: float, clarity: float, posture: float) -> Li
 
 
 # ============================================================================
-# AGENT DEFINITIONS - Split into two agents
+# AGENT DEFINITION
 # ============================================================================
 
-camera_feedback_agent = LlmAgent(
+interview_agent = LlmAgent(
     model=MODEL_NAME,
-    name="Sarah_Camera",
-    description="Interview coach analyzing posture and body language",
+    name="Sarah",
+    description="A friendly, supportive interview coach who provides structured JSON feedback",
     
-    instruction="""You are analyzing camera metrics for a mock interview. Provide concise, actionable feedback.
+    instruction="""You are Sarah, a warm and encouraging interview coach conducting a mock interview practice session.
 
-YOUR TASK:
-- Call the analysis tools for camera metrics
-- Generate a brief JSON response with feedback (MAX 4 SENTENCES)
-- Be specific, supportive, and reference actual metrics
+YOUR ROLE:
+- Conduct a 2-question mock interview
+- Analyze the candidate's posture, eye contact, speech pace, and volume using the provided tools
+- Provide structured JSON feedback after each answer
+- Track performance across the entire session
 
-TOOLS TO CALL:
-- analyze_eye_contact(left_iris, right_iris, maintained, eye_contact_percentage)
-- analyze_posture(shoulder_angle, head_tilt, forward_lean)
-- analyze_movement(head_motion, hand_motion)
+INTERVIEW FLOW:
 
-OUTPUT FORMAT (JSON only):
-{
-  "eye_contact_feedback": "2-3 sentences about eye contact quality and specific improvements",
-  "posture_feedback": "2-3 sentences about posture, shoulder alignment, and sitting position",
-  "movement_feedback": "2-3 sentences about fidgeting, head motion, and overall body control",
-  "overall_camera_summary": "1-2 sentences summarizing camera presence"
-}
+1. FIRST MESSAGE - When you receive "Hello! I'm ready to start my practice interview.":
+   - Greet the candidate warmly
+   - Ask your first question: "Tell me a bit about yourself and what brings you here today."
+   - Output as plain text (not JSON)
 
-GUIDELINES:
-- Keep TOTAL feedback under 4 sentences per category
-- Always call the tools but incorporate their insights naturally - don't cite them
-- Be warm and encouraging while being specific
-- Reference actual metric values when relevant
-- Output ONLY valid JSON, no markdown or extra text""",
+2. AFTER QUESTION 1 - When you receive Camera Metrics and Speech Metrics:
+   - Call ALL the analysis tools to evaluate performance:
+     * analyze_eye_contact(left_iris, right_iris, maintained, eye_contact_percentage)
+     * analyze_posture(shoulder_angle, head_tilt, forward_lean)
+     * analyze_movement(head_motion, hand_motion)
+     * analyze_speech_pace(words_per_minute)
+     * analyze_volume(volume_db)
+     * analyze_clarity(clarity_score)
+     * check_transcript_issues(transcript)
+   
+   - Output a JSON object with TWO keys:
+     {
+       "metrics_summary": {
+         "eye_contact": {
+           "percentage": <float>,
+           "left_iris": <float>,
+           "right_iris": <float>,
+           "status": "maintained" or "wandering"
+         },
+         "posture": {
+           "shoulder_angle": <float>,
+           "head_tilt": <float>,
+           "forward_lean": <float>,
+           "status": "good" or "needs_adjustment"
+         },
+         "movement": {
+           "head_motion": <float>,
+           "hand_motion": <float>,
+           "status": "controlled" or "fidgeting"
+         },
+         "speech": {
+           "transcript": "<full transcript>",
+           "duration": <float>,
+           "words_per_minute": <float>,
+           "volume_db": <float>,
+           "clarity_score": <float>
+         },
+         "issues_detected": {<dict of issues>}
+       },
+       "feedback": {
+         "posture_and_body_language": "<feedback about posture and movement>",
+         "eye_contact": "<feedback about eye contact quality>",
+         "speech_delivery": "<feedback about pace, clarity, and volume>",
+         "overall_presentation": "<brief summary>",
+         "next_question": "What do you think is your greatest strength and how has it helped you in the past?"
+       }
+     }
+
+3. AFTER QUESTION 2 - When you receive the second set of metrics:
+   - Call ALL the analysis tools again
+   - Call evaluate_overall_performance with aggregated scores from both questions
+   
+   - Output a JSON object with THREE keys:
+     {
+       "metrics_summary": {<same structure as Question 1>},
+       "feedback": {
+         "posture_and_body_language": "<feedback about posture and movement>",
+         "eye_contact": "<feedback about eye contact quality>",
+         "speech_delivery": "<feedback aobut pace, clarity, volume>",
+         "overall_presentation": "<brief summary>"
+       },
+       "session_summary": {
+         "performance_level": "<from evaluate_overall_performance>",
+         "overall_score": <float>,
+         "engagement_score": <float>,
+         "clarity_score": <float>,
+         "posture_score": <float>,
+         "summary": "<overall session summary>",
+         "questions_completed": 2,
+         "improvement_areas": [<list of 2-3 areas>],
+         "strengths": [<list of strengths>],
+         "encouragement": "<warm closing message>"
+       }
+     }
+
+FEEDBACK GUIDELINES:
+- Always call the analysis tools and use their feedback but do not cite them directly. DO NOT SAY "According to the tool..."
+- Be specific and reference actual metrics
+- Start feedback sections with positive reinforcement when appropriate
+- Be conversational and supportive
+- For speech_delivery, combine feedback from pace, clarity, volume, and transcript issues
+- Keep the tone warm and encouraging
+
+IMPORTANT:
+- Question 1 response: JSON with "metrics_summary" and "feedback" (includes next_question)
+- Question 2 response: JSON with "metrics_summary", "feedback", and "session_summary"
+- Always output valid JSON that can be parsed by json.loads()
+- Track scores across questions to provide accurate session_summary""",
     
     tools=[
         analyze_eye_contact,
         analyze_posture,
-        analyze_movement
-    ],
-    
-    input_schema=InterviewInput,
-    output_key="camera_feedback"
-)
-
-
-speech_feedback_agent = LlmAgent(
-    model=MODEL_NAME,
-    name="Sarah_Speech",
-    description="Interview coach analyzing speech delivery",
-    
-    instruction="""You are analyzing speech metrics for a mock interview. Provide concise, actionable feedback.
-
-YOUR TASK:
-- Call the analysis tools for speech metrics
-- Generate a brief JSON response with feedback (MAX 4 SENTENCES)
-- Be specific, supportive, and reference actual metrics
-
-TOOLS TO CALL:
-- analyze_speech_pace(words_per_minute)
-- analyze_volume(volume_db)
-- analyze_clarity(clarity_score)
-- check_transcript_issues(transcript)
-
-OUTPUT FORMAT (JSON only):
-{
-  "pace_feedback": "1-2 sentences about speaking speed",
-  "clarity_and_volume_feedback": "2-3 sentences about voice clarity and projection",
-  "content_feedback": "1-2 sentences about filler words or repetition from transcript",
-  "overall_speech_summary": "1-2 sentences summarizing speech delivery"
-}
-
-GUIDELINES:
-- Keep TOTAL feedback under 4 sentences per category
-- Always call the tools but incorporate their insights naturally - don't cite them
-- Be warm and encouraging while being specific
-- Reference actual metric values when relevant
-- Output ONLY valid JSON, no markdown or extra text""",
-    
-    tools=[
+        analyze_movement,
         analyze_speech_pace,
         analyze_volume,
         analyze_clarity,
-        check_transcript_issues
+        check_transcript_issues,
+        evaluate_overall_performance
     ],
     
     input_schema=InterviewInput,
-    output_key="speech_feedback"
+    output_key="interview_response"
 )
-
-
-interview_coordinator_agent = LlmAgent(
-    model=MODEL_NAME,
-    name="Sarah_Coordinator",
-    description="Coordinates the interview flow and asks questions",
-    
-    instruction="""You are Sarah, a friendly interview coach conducting a 2-question mock interview.
-
-YOUR ROLE:
-- Greet candidates warmly on first message
-- Ask interview questions
-- Provide the next question after feedback is given
-- Generate final summary after both questions
-
-INTERVIEW QUESTIONS:
-1. "Tell me a bit about yourself and what brings you here today."
-2. "What do you think is your greatest strength and how has it helped you in the past?"
-
-FLOW:
-- First message: Greet warmly and ask Question 1
-- After Q1 feedback: Provide Question 2
-- After Q2 feedback: You're done (overall summary handled separately)
-
-Keep responses natural and encouraging. Output plain text for greetings/questions.""",
-    
-    tools=[],
-    input_schema=InterviewInput,
-    output_key="coordinator_response"
-)
-
-
-overall_summary_agent = LlmAgent(
-    model=MODEL_NAME,
-    name="Sarah_Summary",
-    description="Provides overall interview performance summary",
-    
-    instruction="""You are providing the final summary for a 2-question mock interview.
-
-YOUR TASK:
-- Call evaluate_overall_performance with aggregated scores
-- Add a warm, encouraging closing message
-
-OUTPUT FORMAT (JSON only):
-{
-  "performance_level": "<from tool>",
-  "overall_score": <float>,
-  "engagement_score": <float>,
-  "clarity_score": <float>,
-  "posture_score": <float>,
-  "summary": "<from tool>",
-  "questions_completed": 2,
-  "improvement_areas": [<from tool>],
-  "strengths": [<from tool>],
-  "encouragement": "1-2 warm sentences encouraging the candidate and congratulating them"
-}
-
-Be genuine and supportive in your encouragement message.""",
-    
-    tools=[evaluate_overall_performance],
-    input_schema=InterviewInput,
-    output_key="summary_response"
-)
-
 
 # ============================================================================
 # SESSION AND RUNNER SETUP
 # ============================================================================
 
 session_service = InMemorySessionService()
-
-camera_runner = Runner(
-    agent=camera_feedback_agent,
-    app_name=f"{APP_NAME}_camera",
+interview_runner = Runner(
+    agent=interview_agent,
+    app_name=APP_NAME,
     session_service=session_service
 )
-
-speech_runner = Runner(
-    agent=speech_feedback_agent,
-    app_name=f"{APP_NAME}_speech",
-    session_service=session_service
-)
-
-coordinator_runner = Runner(
-    agent=interview_coordinator_agent,
-    app_name=f"{APP_NAME}_coordinator",
-    session_service=session_service
-)
-
-summary_runner = Runner(
-    agent=overall_summary_agent,
-    app_name=f"{APP_NAME}_summary",
-    session_service=session_service
-)
-
 
 # ============================================================================
 # EXPORT FOR APP.PY
@@ -511,10 +464,8 @@ __all__ = [
     "APP_NAME",
     "USER_ID",
     "SESSION_ID",
-    "camera_runner",
-    "speech_runner",
-    "coordinator_runner",
-    "summary_runner",
+    "interview_runner",
+    "interview_agent",
     "session_service",
     "types",
     "InterviewInput"

@@ -1,5 +1,5 @@
 """
-tempApp.py - Integrated Camera + Voice data collection with agent feedback
+manualApp.py - Integrated Camera + Voice data collection with agent feedback
 Camera runs in MAIN thread (OpenCV requirement), Voice runs in background thread
 FIXED: Camera continues until voice collection actually completes (after detecting speech + silence)
 ADDED: Manual override with 'q' key or Ctrl+C to stop data collection early
@@ -11,7 +11,7 @@ import threading
 import queue
 from camera import stream_camera_metrics
 from voice import stream_voice_with_text_vad
-from interview_agent.agent import (
+from interview_agent.workingAgent import (
     APP_NAME,
     USER_ID,
     SESSION_ID,

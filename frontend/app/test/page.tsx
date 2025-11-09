@@ -175,11 +175,11 @@ export default function HomePage() {
               content={aiResponse}
             />
             <Node
-              title="Audio Processing Status"
+              title="Metrics Analysis"
               content={audioStatus}
             />
             <Node
-              title="Speech Analysis"
+              title="Overall Feedback"
               content="Speech pacing, clarity, and volume metrics will appear here."
             />
           </div>
