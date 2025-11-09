@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, SetStateAction } from "react";
 import { io, Socket } from "socket.io-client";
 import Node from "../components/Node";
 
@@ -12,11 +12,27 @@ export default function HomePage() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
+  const [interviewStarted, setInterviewStarted] = useState(false);
   const [videoFrame, setVideoFrame] = useState<string | null>(null);
-  const [aiResponse, setAiResponse] = useState<string>("Waiting for AI response...");
-  const [audioStatus, setAudioStatus] = useState<string>("No audio processed yet");
 
   const socketRef = useRef<Socket | null>(null);
+
+  let noVideoURL: SetStateAction<string | null>;
+
+  // Load camera-off.svg as initial video frame
+  useEffect(() => {
+    fetch('/camera-off.svg')
+      .then(res => res.blob())
+      .then(blob => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          noVideoURL = reader.result as string;
+          setVideoFrame(noVideoURL);
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch(err => console.error('Error loading camera-off.svg:', err));
+  }, []);
 
   useEffect(() => {
     // Initialize Socket.IO connection when component mounts
@@ -39,6 +55,7 @@ export default function HomePage() {
       console.log("Disconnected from backend");
       setConnected(false);
       setCameraActive(false);
+      setInterviewStarted(false);
     });
 
     newSocket.on("connection_status", (data) => {
@@ -52,29 +69,23 @@ export default function HomePage() {
         setCameraActive(true);
       } else if (data.status === "stopped") {
         setCameraActive(false);
+        setVideoFrame(noVideoURL);
+      }
+    });
+
+    // Interview event handler
+    newSocket.on("interview_status", (data) => {
+      console.log("Interview status:", data);
+      if (data.status === "started") {
+        setInterviewStarted(true);
+      } else if (data.status === "stopped") {
+        setInterviewStarted(false);
       }
     });
 
     // Video frame handler - receives processed video
     newSocket.on("video_frame", (data: VideoFrame) => {
       setVideoFrame(data.frame);
-    });
-
-    // AI response handler
-    newSocket.on("ai_response", (data) => {
-      console.log("AI response:", data);
-      setAiResponse(data.message);
-    });
-
-    // Audio processed handler
-    newSocket.on("audio_processed", (data) => {
-      console.log("Audio processed:", data);
-      if (data.status === "success") {
-        const audioLength = data.data?.audio_length || 0;
-        setAudioStatus(`Audio processed successfully! Length: ${audioLength} bytes`);
-      } else {
-        setAudioStatus(`Audio processing status: ${data.status}`);
-      }
     });
 
     // Error handler
@@ -101,15 +112,15 @@ export default function HomePage() {
     }
   };
 
-  const sendMessage = () => {
+  const startInterview = () => {
     if (socket && connected) {
-      socket.emit("user_message", {
-        message: "Hello from frontend!",
-        timestamp: Date.now(),
-      });
+      socket.emit("start_interview", {});
     }
   };
 
+  const handleReadyClick = () => {
+    // TODO: Implement ready button functionality
+  };
 
   return (
     <div className="flex flex-col w-[90vw] h-[90vh] bg-[#1e1e1e] rounded-[10px] shadow-[0_0_px_rgba(0,0,0,0.2)] p-5 bg-gradient-to-br from-gray-900 via-gray-800 to-slate-900">
@@ -137,11 +148,11 @@ export default function HomePage() {
             Stop Camera
           </button>
           <button
-            onClick={sendMessage}
-            disabled={!connected}
+            onClick={startInterview}
+            disabled={!connected || interviewStarted}
             className="px-4 py-2 text-sm bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition"
           >
-            Send Test Message
+            Start Interview
           </button>
         </div>
       </div>
@@ -150,10 +161,6 @@ export default function HomePage() {
       <div className="flex flex-row flex-1 gap-5">
         {/* Video Panel */}
         <div className="flex-[3] flex flex-col justify-center items-center relative">
-          <h1 className="font-light m-0 mb-5 tracking-[2px]">
-            Live Video Stream
-          </h1>
-
           {videoFrame ? (
             <img
               src={videoFrame}
@@ -168,21 +175,29 @@ export default function HomePage() {
         </div>
 
         {/* Data Panel */}
-        <div className="flex-1 flex justify-center items-center border-l border-[#444] pl-5">
+        <div className="relative flex-1 flex justify-center items-center border-l border-[#444] pl-5">
           <div className="w-full h-full flex flex-col gap-3 overflow-y-auto pr-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-[#1e1e1e] [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-thumb]:bg-[#555] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[#666]">
             <Node
-              title="AI Response"
-              content={aiResponse}
-            />
-            <Node
-              title="Audio Processing Status"
-              content={audioStatus}
+              title="Interview Questions"
+              content={"TODO: Display interview questions here."}
             />
             <Node
               title="Speech Analysis"
+              content={"TODO: Display speech analysis data here."}
+            />
+            <Node
+              title="Practice Summary"
               content="Speech pacing, clarity, and volume metrics will appear here."
             />
           </div>
+
+          <button
+            onClick={handleReadyClick}
+            disabled={!connected || !interviewStarted}
+            className="absolute bottom-4 left-4 w-16 h-16 rounded-full bg-blue-500 text-white font-semibold text-sm disabled:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-transform duration-150 hover:scale-110 active:scale-95 enabled:hover:bg-blue-600"
+          >
+            Ready!
+          </button>
         </div>
       </div>
     </div>

@@ -125,6 +125,17 @@ async def start_camera(sid, data):
         traceback.print_exc()
         await sio.emit('error', {'message': f'Failed to start camera: {str(e)}'}, to=sid)
 
+@sio.event
+async def start_interview(sid, data):
+    """Start interview session"""
+    global camera_active
+    if not camera_active:
+        await start_camera(sid, data)
+    print(f"Client {sid} requested to start interview")
+    
+	# TODO: Initialize interview session from file that Vinh is working on
+
+    await sio.emit('interview_status', {'status': 'started', 'message': 'Interview started'}, to=sid)
 
 @sio.event
 async def stop_camera(sid, data):
@@ -139,44 +150,6 @@ async def stop_camera(sid, data):
         video_capture = None
 
     await sio.emit('camera_status', {'status': 'stopped', 'message': 'Camera stopped'}, to=sid)
-
-
-@sio.event
-async def process_audio(sid, data):
-    """Process audio data from frontend"""
-    audio_data = data.get('audio', [])
-    print(f"✓ Received audio data from {sid} - Length: {len(audio_data)} bytes")
-
-    # TODO: Implement audio processing with voice.py
-    # For now, acknowledge receipt and send back processing result
-
-    result = {
-        'status': 'success',
-        'message': 'Audio received and processed successfully',
-        'data': {
-            'audio_length': len(audio_data),
-            'timestamp': data.get('timestamp', None),
-            'processed': True,
-            # Add more processing results here when voice.py is integrated
-        }
-    }
-
-    print(f"✓ Sending audio_processed acknowledgment to {sid}")
-    await sio.emit('audio_processed', result, to=sid)
-
-
-@sio.event
-async def user_message(sid, data):
-    """Receive user input/messages from frontend"""
-    message = data.get('message', '')
-    print(f"Received message from {sid}: {message}")
-
-    # TODO: Send to AI agent for processing
-    # For now, echo back
-    await sio.emit('ai_response', {
-        'message': f'Echo: {message}',
-        'timestamp': data.get('timestamp')
-    }, to=sid)
 
 
 # ============================================================================

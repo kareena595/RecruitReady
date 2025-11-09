@@ -21,7 +21,7 @@ export default function LandingPage() {
         </p>
 
         <Link
-          href="/app"
+          href="/test"
           className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-lg px-8 py-4 rounded-full shadow-lg transition"
         >
           Launch
