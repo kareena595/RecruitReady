@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Video Stream with Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="main-container">
+        <div class="video-container">
+            <h1>Live Video Stream</h1>
+            <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Live Stream">
+            <div class="controls">
+                <button id="zoom-in">+</button>
+                <button id="zoom-out">-</button>
+            </div>
+        </div>
+        <div class="data-container">
+            <div id="info-box">
+                <h2>Live Data</h2>
+                <p>Waiting for server data...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to the new, separated JavaScript files -->
+    <script src="{{ url_for('static', filename='videoResizer.js') }}"></script>
+    <script src="{{ url_for('static', filename='dataManager.js') }}"></script>
+</body>
+</html>
