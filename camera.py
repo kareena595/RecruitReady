@@ -537,7 +537,7 @@ def get_camera_metrics_once() -> Optional[Dict]:
     Returns:
         Dictionary containing camera metrics or None if no detection
     """
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0,1200)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
