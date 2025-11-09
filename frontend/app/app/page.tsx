@@ -1,10 +1,17 @@
-//page.tsx
-
 "use client";
 
 import { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
-import Node from "../components/Node";
+
+// Inline Node component since we can't import
+function Node({ title, content }: { title: string; content: string }) {
+  return (
+    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      <h3 className="text-lg font-semibold text-blue-400 mb-3">{title}</h3>
+      <div className="text-gray-300 text-sm whitespace-pre-wrap">{content}</div>
+    </div>
+  );
+}
 
 interface VideoFrame {
   frame: string;
@@ -184,9 +191,8 @@ export default function HomePage() {
         setTranscript("");
         setLastTranscript("");
         
-        // Clear feedback for next question
-        setPostureFeedback("");
-        setSpeechFeedback("");
+        // DON'T clear feedback - keep it visible for review
+        // User can see feedback from previous question while answering next one
       }
     });
 
@@ -396,15 +402,12 @@ export default function HomePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-row flex-1 gap-5">
-        {/* Video Panel */}
-        <div className="flex-[3] flex flex-col justify-center items-center relative">
-          <h1 className="font-light m-0 mb-5 tracking-[2px]">
-            Live Video Stream
-          </h1>
-
+      <div className="flex flex-row flex-1 gap-5 overflow-hidden">
+        {/* Video Panel - Now with vertical layout and scrolling */}
+        <div className="flex-[3] flex flex-col overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-[#1e1e1e] [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-thumb]:bg-[#555] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[#666]">
+          {/* Video Frame at Top */}
           {videoFrame ? (
-            <div className="relative max-h-[70%] w-full">
+            <div className="relative w-full mb-4">
               <img
                 src={videoFrame}
                 alt="Live Stream"
@@ -418,14 +421,14 @@ export default function HomePage() {
               )}
             </div>
           ) : (
-            <div className="max-h-[70%] w-full rounded-lg bg-gray-800 flex items-center justify-center text-gray-500">
+            <div className="w-full h-64 rounded-lg bg-gray-800 flex items-center justify-center text-gray-500 mb-4">
               {cameraActive ? "Waiting for video..." : "Camera not active"}
             </div>
           )}
 
           {/* Current Question Display */}
           {currentQuestion && !interviewComplete && (
-            <div className="mt-6 w-full p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
+            <div className="w-full p-4 bg-blue-900/30 rounded-lg border border-blue-500/30 mb-4">
               <h3 className="text-lg font-semibold text-blue-300 mb-2">Current Question:</h3>
               <p className="text-white">{currentQuestion}</p>
             </div>
@@ -433,7 +436,7 @@ export default function HomePage() {
 
           {/* Recording Controls */}
           {interviewActive && !interviewComplete && (
-            <div className="mt-4 flex gap-3">
+            <div className="flex gap-3 mb-4">
               <button
                 onClick={startRecording}
                 disabled={recording}
@@ -451,9 +454,9 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Live Transcript */}
+          {/* Live Transcript - Now fully visible */}
           {transcript && recording && (
-            <div className="mt-4 w-full p-4 bg-gray-800 rounded-lg border border-gray-600">
+            <div className="w-full p-4 bg-gray-800 rounded-lg border border-gray-600">
               <h3 className="text-sm font-semibold text-gray-400 mb-2">
                 Your Answer ({wordCount} words):
               </h3>

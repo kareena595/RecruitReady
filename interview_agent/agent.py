@@ -330,7 +330,7 @@ camera_feedback_agent = LlmAgent(
 
 YOUR TASK:
 - Call the analysis tools for camera metrics
-- Generate a brief JSON response with feedback (MAX 4 SENTENCES)
+- Generate a brief JSON response with feedback (MAX 1-2 SHORT SENTENCES per field)
 - Be specific, supportive, and reference actual metrics
 
 TOOLS TO CALL:
@@ -340,16 +340,17 @@ TOOLS TO CALL:
 
 OUTPUT FORMAT (JSON only):
 {
-  "eye_contact_feedback": "2-3 sentences about eye contact quality and specific improvements",
-  "posture_feedback": "2-3 sentences about posture, shoulder alignment, and sitting position",
-  "movement_feedback": "2-3 sentences about fidgeting, head motion, and overall body control",
-  "overall_camera_summary": "1-2 sentences summarizing camera presence"
+  "eye_contact_feedback": "1 SHORT sentences about eye contact (e.g., 'You maintained 85% eye contact. Try to keep your gaze centered on the camera.')",
+  "posture_feedback": "1 SHORT sentences about posture (e.g., 'Your posture is good with level shoulders. Sit back slightly to reduce forward lean.')",
+  "movement_feedback": "1 SHORT sentences about movement (e.g., 'Minimal fidgeting detected. Your body language appears controlled and professional.')",
+  "overall_camera_summary": "1 SHORT sentence summarizing overall camera presence"
 }
 
-GUIDELINES:
-- Keep TOTAL feedback under 4 sentences per category
+CRITICAL RULES:
+- Each field must be 1 SHORT sentences MAXIMUM (aim for <10 words per field)
+- Do NOT exceed 1 sentences per field under any circumstances
+- Be direct and concise - no filler words
 - Always call the tools but incorporate their insights naturally - don't cite them
-- Be warm and encouraging while being specific
 - Reference actual metric values when relevant
 - Output ONLY valid JSON, no markdown or extra text""",
     
@@ -373,7 +374,7 @@ speech_feedback_agent = LlmAgent(
 
 YOUR TASK:
 - Call the analysis tools for speech metrics
-- Generate a brief JSON response with feedback (MAX 4 SENTENCES)
+- Generate a brief JSON response with feedback (MAX 1-2 SHORT SENTENCES per field)
 - Be specific, supportive, and reference actual metrics
 
 TOOLS TO CALL:
@@ -384,16 +385,17 @@ TOOLS TO CALL:
 
 OUTPUT FORMAT (JSON only):
 {
-  "pace_feedback": "1-2 sentences about speaking speed",
-  "clarity_and_volume_feedback": "2-3 sentences about voice clarity and projection",
-  "content_feedback": "1-2 sentences about filler words or repetition from transcript",
-  "overall_speech_summary": "1-2 sentences summarizing speech delivery"
+  "pace_feedback": "1 SHORT sentences about speaking speed (e.g., 'Your pace is 145 WPM, which is excellent. Keep this natural rhythm.')",
+  "clarity_and_volume_feedback": "1 SHORT sentences about clarity and volume (e.g., 'Your volume is clear at -52dB. Enunciation is strong throughout.')",
+  "content_feedback": "1 SHORT sentences about filler words or repetition (e.g., 'Some filler words detected. Pause instead of using 'um' or 'like'.')",
+  "overall_speech_summary": "1 SHORT sentence summarizing speech delivery"
 }
 
-GUIDELINES:
-- Keep TOTAL feedback under 4 sentences per category
+CRITICAL RULES:
+- Each field must be 1 SHORT sentences MAXIMUM (aim for <10 words per field)
+- Do NOT exceed 1 sentences per field under any circumstances
+- Be direct and concise - no filler words
 - Always call the tools but incorporate their insights naturally - don't cite them
-- Be warm and encouraging while being specific
 - Reference actual metric values when relevant
 - Output ONLY valid JSON, no markdown or extra text""",
     
@@ -461,7 +463,7 @@ OUTPUT FORMAT (JSON only):
   "questions_completed": 2,
   "improvement_areas": [<from tool>],
   "strengths": [<from tool>],
-  "encouragement": "1-2 warm sentences encouraging the candidate and congratulating them"
+  "encouragement": "2-3 summarizing points of improvement, what they did well,encouraging the candidate and congratulating them"
 }
 
 Be genuine and supportive in your encouragement message.""",
