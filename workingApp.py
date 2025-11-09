@@ -10,7 +10,7 @@ import threading
 import queue
 from camera import stream_camera_metrics
 from voice import stream_voice_with_text_vad
-from interview_agent.agent import (
+from interview_agent.workingAgent import (
     APP_NAME,
     USER_ID,
     SESSION_ID,
