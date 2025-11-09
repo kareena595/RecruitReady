@@ -3,9 +3,10 @@ Create two virtual environments, and install the respective dependencies in each
     openai-whisper  
     numpy
     opencv
-    mediapipe
+    mediapipe (8)
     #For macOS, brew install portaudio first before pip install pyaudio
     pyaudio
 
 .venv_agent
-    google-adk
+    google-adk (9)
+    webrtcvad

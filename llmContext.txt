@@ -24,8 +24,8 @@ Eye contact (iris tracking)
 Outputs all metrics as a JSON file, e.g.:
 
 {
-  "left_iris_relative": 0.3,
-  "right_iris_relative": 0.35,
+  "left_iris_relative": 2.0,
+  "right_iris_relative": -1.85,
   "head_tilt": 180,
   "shoulder_tilt": 180,
   "hand_fidget": 1.0
@@ -103,11 +103,13 @@ Current Status:
 
 camera.py and voice.py are fully functional and output JSON metrics independently.
 
-agent.py has a baseline AI agent implemented with Google ADK but needs refinement to process inputs fully, make autonomous decisions, give feedback, ask questions, and summarize sessions.
+agent.py uses google's ADK to create an AI agent that will take in the json inputs and give feedback while conducting the interview
 
-Focus is on a friendly, casual interviewer with two questions and basic scoring.
+app.py. Currently simulating the interview to make sure the AI agent is taking in mock speech and camera data and giving adequate feedbac. We need to use app as a connector between the agent and camera.py and voice.py
 
 Important Notes for Any LLM Working on This:
+
+camera.py. app.py ,and voice.py are all in the root directory. agent.py exists in a folder called interview_agent
 
 Use JSON as the interface between modules.
 

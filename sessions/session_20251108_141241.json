@@ -1,0 +1,81 @@
+{
+  "session_id": "session_20251108_141241",
+  "start_time": "2025-11-08T14:12:41.931197",
+  "questions": [
+    {
+      "question_number": 1,
+      "question_text": "I'm ready to help you practice!",
+      "timestamp": "2025-11-08T14:12:41.938523"
+    }
+  ],
+  "metrics_log": [
+    {
+      "question_number": 1,
+      "timestamp": "2025-11-08T14:13:09.559676",
+      "camera_metrics": {
+        "left_iris_relative": 2.8,
+        "right_iris_relative": -1.9,
+        "eye_contact_maintained": true,
+        "shoulder_angle": 178.0,
+        "head_tilt": 182.0,
+        "forward_lean": 0.08,
+        "head_motion": 12.5,
+        "hand_motion": 18.3,
+        "timestamp": 1762629189.559649
+      },
+      "voice_metrics": {
+        "text": "I have a background in software engineering with three years of experience. I've worked on full-stack web applications using React and Node.js, and I'm passionate about creating user-friendly interfaces.",
+        "words_per_minute": 155,
+        "volume_db": -63.0,
+        "clarity_score": 0.82,
+        "timestamp": 1762629189.559665
+      }
+    },
+    {
+      "question_number": 2,
+      "timestamp": "2025-11-08T14:13:14.732390",
+      "camera_metrics": {
+        "left_iris_relative": 2.7,
+        "right_iris_relative": -2.0,
+        "eye_contact_maintained": false,
+        "shoulder_angle": 172.0,
+        "head_tilt": 176.0,
+        "forward_lean": 0.18,
+        "head_motion": 22.0,
+        "hand_motion": 29.5,
+        "timestamp": 1762629194.732361
+      },
+      "voice_metrics": {
+        "text": "One challenging project was when I had to migrate our entire database system from MySQL to PostgreSQL. We had to ensure zero downtime for our users, which required careful planning and execution.",
+        "words_per_minute": 195,
+        "volume_db": -65.0,
+        "clarity_score": 0.72,
+        "timestamp": 1762629194.732378
+      }
+    }
+  ],
+  "agent_responses": [
+    {
+      "type": "opening",
+      "text": "I'm ready to help you practice!",
+      "timestamp": "2025-11-08T14:12:41.938545"
+    },
+    {
+      "type": "feedback",
+      "question_number": 1,
+      "text": "I'm ready to help you practice!",
+      "timestamp": "2025-11-08T14:13:09.563737"
+    },
+    {
+      "type": "final_evaluation",
+      "question_number": 2,
+      "text": "I'm ready to help you practice!",
+      "timestamp": "2025-11-08T14:13:14.737007"
+    }
+  ],
+  "final_evaluation": {
+    "text": "I'm ready to help you practice!",
+    "timestamp": "2025-11-08T14:13:14.737024"
+  },
+  "end_time": "2025-11-08T14:13:14.737627"
+}

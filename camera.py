@@ -1,10 +1,12 @@
+#camera.py
 import cv2
 import mediapipe as mp
 import numpy as np
-from dataclasses import dataclass
-from typing import Optional, Dict, List
+from dataclasses import dataclass, asdict
+from typing import Optional, Dict, List, Generator
 import time
 from collections import deque
+import json
 
 @dataclass
 class PostureMetrics:
@@ -15,15 +17,26 @@ class PostureMetrics:
     is_slouching: bool
     is_tilted: bool
     is_leaning: bool
-    # New metrics
     head_motion_score: float
     hand_motion_score: float
     eye_contact_maintained: bool
     eye_contact_duration: float
     is_head_moving: bool
     is_hand_fidgeting: bool
+    left_iris_relative: Optional[float]
+    right_iris_relative: Optional[float]
     timestamp: float
     issues: List[str]
+    
+    def to_json(self) -> str:
+        """Convert metrics to JSON string"""
+        data = asdict(self)
+        return json.dumps(data)
+    
+    def to_dict(self) -> dict:
+        """Convert metrics to dictionary"""
+        return asdict(self)
+
 
 class PostureDetector:
     """Detects and analyzes posture using MediaPipe Pose"""
@@ -65,15 +78,13 @@ class PostureDetector:
         self.SHOULDER_ANGLE_MAX = 195
         
         # New thresholds
-        self.HEAD_MOTION_THRESHOLD = 15.0  # Pixels per frame
-        self.HAND_MOTION_THRESHOLD = 20.0  # Pixels per frame
-        self.EYE_CONTACT_DURATION_THRESHOLD = 2.0  # Seconds
-        #self.EYE_CENTER_THRESHOLD = 0.15  # Ratio threshold for eye centering
-
+        self.HEAD_MOTION_THRESHOLD = 15.0
+        self.HAND_MOTION_THRESHOLD = 20.0
+        self.EYE_CONTACT_DURATION_THRESHOLD = 2.0
         self.LEFT_EYE_MIN = 2.75
-        self.LEFT_EYE_MAX = 2.85
+        self.LEFT_EYE_MAX = 2.95
         self.RIGHT_EYE_MIN = -1.95
-        self.RIGHT_EYE_MAX = -1.875
+        self.RIGHT_EYE_MAX = -1.775
         
         # For smoothing measurements
         self.metric_history = {
@@ -85,7 +96,7 @@ class PostureDetector:
         
         # Head motion tracking
         self.head_position_history = deque(maxlen=10)
-        self.head_motion_buffer = deque(maxlen=30)  # Track last 30 frames (~1 sec)
+        self.head_motion_buffer = deque(maxlen=30)
         
         # Hand motion tracking
         self.hand_positions_history = deque(maxlen=10)
@@ -138,7 +149,6 @@ class PostureDetector:
         if len(self.head_position_history) < 2:
             return 0.0
         
-        # Calculate displacement from previous frame
         prev_pos = self.head_position_history[-2]
         curr_pos = self.head_position_history[-1]
         
@@ -149,7 +159,6 @@ class PostureDetector:
         
         self.head_motion_buffer.append(displacement)
         
-        # Average motion over buffer period
         avg_motion = np.mean(list(self.head_motion_buffer))
         return avg_motion
     
@@ -159,14 +168,11 @@ class PostureDetector:
             self.hand_positions_history.append(None)
             return 0.0
         
-        # Calculate center point of all detected hands
         hand_centers = []
         for hand_landmarks in hand_landmarks_list:
-            # Use wrist as reference point
             wrist = hand_landmarks.landmark[self.mp_hands.HandLandmark.WRIST]
             hand_centers.append((wrist.x, wrist.y))
         
-        # Average position of all hands
         avg_hand_pos = np.mean(hand_centers, axis=0) if hand_centers else None
         
         self.hand_positions_history.append(avg_hand_pos)
@@ -174,12 +180,10 @@ class PostureDetector:
         if len(self.hand_positions_history) < 2 or avg_hand_pos is None:
             return 0.0
         
-        # Calculate displacement
         if self.hand_positions_history[-2] is not None:
             prev_pos = self.hand_positions_history[-2]
             curr_pos = avg_hand_pos
             
-            # Convert to pixel displacement (assuming 1280x720)
             displacement = np.sqrt(
                 ((curr_pos[0] - prev_pos[0]) * 1280)**2 + 
                 ((curr_pos[1] - prev_pos[1]) * 720)**2
@@ -187,55 +191,38 @@ class PostureDetector:
             
             self.hand_motion_buffer.append(displacement)
         
-        # Average motion over buffer period
         avg_motion = np.mean(list(self.hand_motion_buffer)) if self.hand_motion_buffer else 0.0
         return avg_motion
     
     def check_eye_contact(self, face_landmarks, image_shape) -> tuple:
-        """
-        Check if eyes are looking at camera
-        Returns: (is_looking, duration_looking_away, left_iris_relative, right_iris_relative)
-        """
+        """Check if eyes are looking at camera"""
         if not face_landmarks:
             return True, 0.0, None, None
         
         h, w = image_shape[:2]
         
-        # Key iris landmarks (left and right iris centers)
-        # MediaPipe face mesh iris indices: 468-473 (right), 473-478 (left)
         left_iris_indices = [474, 475, 476, 477]
         right_iris_indices = [469, 470, 471, 472]
         
-        # Get iris centers
         left_iris_x = np.mean([face_landmarks.landmark[i].x for i in left_iris_indices])
-        left_iris_y = np.mean([face_landmarks.landmark[i].y for i in left_iris_indices])
-        
         right_iris_x = np.mean([face_landmarks.landmark[i].x for i in right_iris_indices])
-        right_iris_y = np.mean([face_landmarks.landmark[i].y for i in right_iris_indices])
         
-        # Get eye corners to calculate relative position
-        # Left eye: 33 (outer), 133 (inner)
-        # Right eye: 362 (outer), 263 (inner)
         left_eye_left = face_landmarks.landmark[33].x
         left_eye_right = face_landmarks.landmark[133].x
         right_eye_left = face_landmarks.landmark[263].x
         right_eye_right = face_landmarks.landmark[362].x
         
-        # Calculate relative iris position (0 = outer corner, 1 = inner corner)
         left_eye_width = abs(left_eye_right - left_eye_left)
         right_eye_width = abs(right_eye_right - right_eye_left)
         
         left_iris_relative = (left_iris_x - left_eye_left) / left_eye_width if left_eye_width > 0 else 0.5
         right_iris_relative = (right_iris_x - right_eye_right) / right_eye_width if right_eye_width > 0 else 0.5
         
-        # Eyes should be centered (around 0.5) when looking at camera
-        # Allow some threshold for natural variation
         left_centered = self.LEFT_EYE_MIN < left_iris_relative < self.LEFT_EYE_MAX
         right_centered = self.RIGHT_EYE_MIN < right_iris_relative < self.RIGHT_EYE_MAX
         
         is_looking = left_centered and right_centered
         
-        # Track duration of looking away
         current_time = time.time()
         
         if not is_looking:
@@ -293,7 +280,7 @@ class PostureDetector:
         hand_motion = self.calculate_hand_motion(hand_landmarks_list)
         is_looking, time_looking_away, left_iris_rel, right_iris_rel = self.check_eye_contact(face_landmarks, image_shape)
         
-        # Store iris values for debugging display
+        # Store iris values
         self.last_left_iris = left_iris_rel
         self.last_right_iris = right_iris_rel
         
@@ -343,6 +330,8 @@ class PostureDetector:
             eye_contact_duration=time_looking_away,
             is_head_moving=is_head_moving,
             is_hand_fidgeting=is_hand_fidgeting,
+            left_iris_relative=left_iris_rel,
+            right_iris_relative=right_iris_rel,
             timestamp=time.time(),
             issues=issues
         )
@@ -362,7 +351,6 @@ class PostureDetector:
             status = "Good Posture"
             status_color = (0, 255, 0)
         else:
-            # Prioritize issues
             if "Missing Eye Contact" in metrics.issues:
                 status = "Missing Eye Contact"
             elif "Excessive Head Movement" in metrics.issues:
@@ -417,16 +405,6 @@ class PostureDetector:
         if self.last_left_iris is not None and self.last_right_iris is not None:
             cv2.putText(image, f"L Iris: {self.last_left_iris:.3f} | R Iris: {self.last_right_iris:.3f}", 
                        (20, y_offset), font, 0.45, (255, 200, 0), 1)
-            y_offset += 20
-            threshold_info = f"Left: {self.LEFT_EYE_MIN:.2f} to {self.LEFT_EYE_MAX:.2f} \n Right: {self.RIGHT_EYE_MIN:.2f} to {self.RIGHT_EYE_MAX:.2f}"
-            cv2.putText(image, threshold_info, 
-                       (20, y_offset), font, 0.4, (200, 200, 200), 1)
-        
-        # Draw additional issues
-        if len(metrics.issues) > 1:
-            y_offset += 30
-            cv2.putText(image, f"Other Issues: {len(metrics.issues) - 1}", 
-                       (20, y_offset), font, 0.4, (255, 255, 0), 1)
         
         return image
     
@@ -484,20 +462,30 @@ class PostureDetector:
         self.face_mesh.close()
 
 
-def main():
-    """Main function to run the posture detection system"""
+# ============================================================================
+# STREAMING INTERFACE FOR APP.PY
+# ============================================================================
+
+def stream_camera_metrics(show_video: bool = True) -> Generator[Dict, None, None]:
+    """
+    Generator function that continuously yields camera metrics
     
+    Args:
+        show_video: Whether to display the video feed (default: True)
+        
+    Yields:
+        Dictionary containing camera metrics
+        
+    Usage in app.py:
+        for metrics in stream_camera_metrics():
+            # metrics is a dict with all camera data
+            print(metrics)
+    """
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
     detector = PostureDetector()
-    
-    print("Starting interview posture detector...")
-    print("Press 'q' to quit")
-    print("Press 's' to save current metrics")
-    
-    session_metrics = []
     
     try:
         while cap.isOpened():
@@ -510,54 +498,85 @@ def main():
             frame = cv2.flip(frame, 1)
             annotated_frame, metrics = detector.process_frame(frame)
             
+            if show_video:
+                cv2.imshow('Interview Posture Detector', annotated_frame)
+                
+                # Check for 'q' key to quit
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            
+            # Yield metrics if available
             if metrics:
-                session_metrics.append(metrics)
-            
-            cv2.imshow('Interview Posture Detector', annotated_frame)
-            
-            key = cv2.waitKey(1) & 0xFF
-            
-            if key == ord('q'):
-                break
-            elif key == ord('s') and metrics:
-                print(f"\n--- Current Metrics ---")
-                print(f"Shoulder Angle: {metrics.shoulder_angle:.2f}°")
-                print(f"Head Tilt: {metrics.head_tilt:.2f}°")
-                print(f"Forward Lean: {metrics.forward_lean:.2f}")
-                print(f"Head Motion: {metrics.head_motion_score:.2f} px/frame")
-                print(f"Hand Motion: {metrics.hand_motion_score:.2f} px/frame")
-                print(f"Eye Contact: {'Maintained' if metrics.eye_contact_maintained else f'Away for {metrics.eye_contact_duration:.1f}s'}")
-                print(f"Issues: {', '.join(metrics.issues) if metrics.issues else 'None'}")
-                print("----------------------\n")
+                yield metrics.to_dict()
+            else:
+                # Yield empty metrics if no detection
+                yield {
+                    "shoulder_angle": 180,
+                    "head_tilt": 180,
+                    "forward_lean": 0.0,
+                    "head_motion_score": 0.0,
+                    "hand_motion_score": 0.0,
+                    "eye_contact_maintained": True,
+                    "left_iris_relative": None,
+                    "right_iris_relative": None,
+                    "timestamp": time.time()
+                }
     
     finally:
         cap.release()
-        cv2.destroyAllWindows()
+        if show_video:
+            cv2.destroyAllWindows()
         detector.release()
+
+
+def get_camera_metrics_once() -> Optional[Dict]:
+    """
+    Capture a single frame and return metrics
+    Useful for testing or single-shot analysis
+    
+    Returns:
+        Dictionary containing camera metrics or None if no detection
+    """
+    cap = cv2.VideoCapture(0,1200)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    
+    detector = PostureDetector()
+    
+    try:
+        success, frame = cap.read()
+        if success:
+            frame = cv2.flip(frame, 1)
+            _, metrics = detector.process_frame(frame)
+            return metrics.to_dict() if metrics else None
+    finally:
+        cap.release()
+        detector.release()
+    
+    return None
+
+
+# ============================================================================
+# STANDALONE TEST
+# ============================================================================
+
+def main():
+    """Test function - streams metrics and prints them"""
+    print("Starting camera metrics streaming...")
+    print("Press 'q' to quit")
+    print("-" * 70)
+    
+    frame_count = 0
+    for metrics in stream_camera_metrics(show_video=True):
+        frame_count += 1
         
-        if session_metrics:
-            print("\n=== Session Summary ===")
-            print(f"Total frames analyzed: {len(session_metrics)}")
-            
-            issues_detected = sum(1 for m in session_metrics if m.issues)
-            print(f"Frames with issues: {issues_detected} ({issues_detected/len(session_metrics)*100:.1f}%)")
-            
-            head_moving = sum(1 for m in session_metrics if m.is_head_moving)
-            hand_fidgeting = sum(1 for m in session_metrics if m.is_hand_fidgeting)
-            eye_contact_lost = sum(1 for m in session_metrics if not m.eye_contact_maintained)
-            
-            print(f"\nIssue Breakdown:")
-            print(f"  Head Movement: {head_moving} frames ({head_moving/len(session_metrics)*100:.1f}%)")
-            print(f"  Hand Fidgeting: {hand_fidgeting} frames ({hand_fidgeting/len(session_metrics)*100:.1f}%)")
-            print(f"  Eye Contact Lost: {eye_contact_lost} frames ({eye_contact_lost/len(session_metrics)*100:.1f}%)")
-            
-            print(f"\nAverage Metrics:")
-            print(f"  Shoulder Angle: {np.mean([m.shoulder_angle for m in session_metrics]):.2f}°")
-            print(f"  Head Tilt: {np.mean([m.head_tilt for m in session_metrics]):.2f}°")
-            print(f"  Forward Lean: {np.mean([m.forward_lean for m in session_metrics]):.2f}")
-            print(f"  Head Motion: {np.mean([m.head_motion_score for m in session_metrics]):.2f} px/frame")
-            print(f"  Hand Motion: {np.mean([m.hand_motion_score for m in session_metrics]):.2f} px/frame")
-            print("======================\n")
+        # Print every 30 frames (~1 second at 30fps)
+        if frame_count % 30 == 0:
+            print(f"\nFrame {frame_count}:")
+            print(f"  Eye Contact: {metrics.get('eye_contact_maintained')}")
+            print(f"  Head Tilt: {metrics.get('head_tilt', 0):.1f}°")
+            print(f"  Shoulder Angle: {metrics.get('shoulder_angle', 0):.1f}°")
+            print(f"  Hand Fidgeting: {metrics.get('hand_motion_score', 0):.1f}")
 
 
 if __name__ == "__main__":

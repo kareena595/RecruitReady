@@ -1,0 +1,20 @@
+{
+  "session_id": "session_20251108_141728",
+  "start_time": "2025-11-08T14:17:28.616896",
+  "questions": [
+    {
+      "question_number": 1,
+      "question_text": "I'm ready to help you practice!",
+      "timestamp": "2025-11-08T14:17:28.624434"
+    }
+  ],
+  "metrics_log": [],
+  "agent_responses": [
+    {
+      "type": "opening",
+      "text": "I'm ready to help you practice!",
+      "timestamp": "2025-11-08T14:17:28.624451"
+    }
+  ],
+  "final_evaluation": null
+}

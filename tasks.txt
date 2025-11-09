@@ -1,20 +1,156 @@
-Train AI Agent/Model
-- Give sample inputs of data and see what it can do or what feedback it can generate
-- Don't connect live data just yet
-- ai.dev
+I pasted the code over for my current agent.py program. This agent is intended to take in data about the visuals like eye contact, head tilt, forward lean as well as speech like words per minute, text transcription. The ai is meant to analyze the inputs of the mock interview and give feedback while asking another questino to simulate an interview. Right now, I can run adk run interview_agent and the code above runs. However, I want to integrate this into my pipeline is rather than calling it from terminal, I want to be able to call it from a separate program, let's call app.py. Right now, I just want to feed it sample data. The long term goal is to link this with my camera.py and voice.py code so that the agent collects live data. This requires making an APP_NAME which you will call agent" along with a user_ID, session_ID_TOOL_AGENT, and SESSION_ID_SCHEMA_AGENT. This is because to actually call the agent, we needs to use InMemorySessionService and Runner. You can't just call root_agent.run(inputs). 
+
+I have pasted a basic baseline tempApp.py and a different agent.py. This works by running the tempApp.py file as main. This calls the agent.py with inputs and the agent thinks and outputs the information. I want you to base your app.py implementation off of the tempApp.py file. Make it work specifically for the first agent.py file I submitted that needs the camera and voice inputs. Just like the tempApp.py, I want to run the app.py as the main with just mock data before I actually connect the entire pipeline. Can you do that for me? Remember to just write the app.py following tempApp.py that uses sessions and runners, but let me know if the original agent.py file needs changing too
+
+```python
+# agent.py (basic example agent.py)
+# Copyright 2025 Google LLC
+# Licensed under the Apache License, Version 2.0
+
+import os
+import json
+from dotenv import load_dotenv
+from pydantic import BaseModel, Field
+from google.adk.agents import LlmAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
+from google import genai
+
+# --- Load API key ---
+load_dotenv()
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    raise ValueError("Missing GOOGLE_API_KEY environment variable.")
+os.environ["GOOGLE_API_KEY"] = api_key
+
+# Quick connection test (optional)
+client = genai.Client(api_key=api_key)
+print("✅ Connected to Gemini:", client.models.generate_content(
+    model="gemini-2.0-flash", contents="Connection test successful!"
+).text)
+
+# --- Constants ---
+APP_NAME = "agent_comparison_app"
+USER_ID = "test_user_456"
+SESSION_ID_TOOL_AGENT = "session_tool_agent_xyz"
+SESSION_ID_SCHEMA_AGENT = "session_schema_agent_xyz"
+MODEL_NAME = "gemini-2.5-flash"
+
+# --- Schemas ---
+class CountryInput(BaseModel):
+    country: str = Field(description="The country to get information about.")
+
+class CapitalInfoOutput(BaseModel):
+    capital: str = Field(description="The capital city of the country.")
+    population_estimate: str = Field(description="Estimated population of the capital city.")
+
+# --- Tool ---
+def get_capital_city(country: str) -> str:
+    """Retrieve the capital city of a given country."""
+    print(f"-- Tool Call: get_capital_city('{country}') --")
+    capitals = {
+        "united states": "Washington, D.C.",
+        "canada": "Ottawa",
+        "france": "Paris",
+        "japan": "Tokyo",
+    }
+    return capitals.get(country.lower(), f"Sorry, I couldn't find the capital for {country}.")
+
+# --- Agents ---
+capital_agent_with_tool = LlmAgent(
+    model=MODEL_NAME,
+    name="capital_agent_tool",
+    description="Retrieves the capital city using a specific tool.",
+    instruction=(
+        "You are a helpful agent that provides the capital city of a country using a tool.\n"
+        "The user will provide the country name as JSON like {'country': 'country_name'}.\n"
+        "1. Extract the country.\n"
+        "2. Use get_capital_city tool.\n"
+        "3. Respond clearly to the user."
+    ),
+    tools=[get_capital_city],
+    input_schema=CountryInput,
+    output_key="capital_tool_result",
+)
+
+structured_info_agent_schema = LlmAgent(
+    model=MODEL_NAME,
+    name="structured_info_agent_schema",
+    description="Provides capital and population estimate in JSON format.",
+    instruction=f"You must return JSON matching: {json.dumps(CapitalInfoOutput.model_json_schema(), indent=2)}",
+    input_schema=CountryInput,
+    output_schema=CapitalInfoOutput,
+    output_key="structured_info_result",
+)
+
+# --- Sessions + Runners ---
+session_service = InMemorySessionService()
+capital_runner = Runner(agent=capital_agent_with_tool, app_name=APP_NAME, session_service=session_service)
+structured_runner = Runner(agent=structured_info_agent_schema, app_name=APP_NAME, session_service=session_service)
+
+# --- Export all important objects for tempApp.py ---
+__all__ = [
+    "APP_NAME", "USER_ID",
+    "SESSION_ID_TOOL_AGENT", "SESSION_ID_SCHEMA_AGENT",
+    "capital_runner", "structured_runner",
+    "capital_agent_with_tool", "structured_info_agent_schema",
+    "session_service", "types"
+]
 
 
-Speech
-- Use Whisper to incorporate speech pacing, clarity, etc.
 
-#Agentic AI
-Great! Can you create an AI agent using Google gemini that will take in the data from both the speech voice.py (specifically speaking rate, volume, and clarity) and the camera.py (Shoulder angle: {metrics.shoulder_angle}
-- Head tilt: {metrics.head_tilt}
-- Forward lean: {metrics.forward_lean}
-- Head motion: {head_velocity}
-- Hand motion: {hand_velocity}
-- Eye contact deviation: {eye_deviation}) and from there give feedback on those points? I was also thinking, what if the AI agent asks as a practice interviewer. The agent asks a question, then monitors the person's response over a set amount of time. From there the agent can offer immediate feedback based on the posture and the clarity of the speech. Then the agent can ask another question. That way the agent is interacting and essentially interviewing the interviewee. Also, we could say that we can develop different AI agents with different "difficulties" and things they look for, helping users adapt to different types of interviewers, whether they have al ower speech threshold, lower volume, get distracted easily etc. The AI agent should have a detailed prompt And directly interact with the user live. I want the AI agent to also have other functionality rather than just outputting speech because that's essentially want an LLM is. Please brainstorm and implement other agentic features to allow the AI interviewer to interact more directly with the user
+```
 
 
+```python
+# tempApp.py
+import asyncio
+import json
+from test.agent import (
+    APP_NAME, USER_ID, SESSION_ID_TOOL_AGENT, SESSION_ID_SCHEMA_AGENT,
+    capital_runner, structured_runner,
+    capital_agent_with_tool, structured_info_agent_schema,
+    session_service, types
+)
 
-#LLM General Context
+async def call_agent_and_print(runner_instance, agent_instance, session_id, query_json):
+    print(f"\n>>> Calling {agent_instance.name} with query: {query_json}")
+    user_content = types.Content(role='user', parts=[types.Part(text=query_json)])
+    final_response_content = "No final response received."
+
+    async for event in runner_instance.run_async(
+        user_id=USER_ID, session_id=session_id, new_message=user_content
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            final_response_content = event.content.parts[0].text
+
+    print(f"<<< {agent_instance.name} Response: {final_response_content}")
+
+    current_session = await session_service.get_session(
+        app_name=APP_NAME, user_id=USER_ID, session_id=session_id
+    )
+    stored_output = current_session.state.get(agent_instance.output_key)
+
+    print(f"--- Session State [{agent_instance.output_key}]: ", end="")
+    try:
+        print(json.dumps(json.loads(stored_output), indent=2))
+    except Exception:
+        print(stored_output)
+    print("-" * 40)
+
+async def main():
+    print("--- Creating Sessions ---")
+    await session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID_TOOL_AGENT)
+    await session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID_SCHEMA_AGENT)
+
+    print("--- Testing Agent with Tool ---")
+    await call_agent_and_print(capital_runner, capital_agent_with_tool, SESSION_ID_TOOL_AGENT, '{"country": "France"}')
+
+    print("\n--- Testing Agent with Schema ---")
+    await call_agent_and_print(structured_runner, structured_info_agent_schema, SESSION_ID_SCHEMA_AGENT, '{"country": "Japan"}')
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```

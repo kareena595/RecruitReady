@@ -1,0 +1,49 @@
+{
+  "session_id": "session_20251108_143201",
+  "start_time": "2025-11-08T14:32:01.633921",
+  "questions": [
+    {
+      "question_number": 1,
+      "question_text": "Hello! Welcome to your practice interview. I'm Sarah, and I'm here to help you improve your interview skills. Let's start with an easy question: Tell me a bit about yourself and what brings you here today.",
+      "timestamp": "2025-11-08T14:32:01.634194"
+    }
+  ],
+  "metrics_log": [
+    {
+      "question_number": 1,
+      "timestamp": "2025-11-08T14:32:09.391528",
+      "camera_metrics": {
+        "left_iris_relative": 2.8,
+        "right_iris_relative": -1.9,
+        "eye_contact_maintained": true,
+        "shoulder_angle": 178.0,
+        "head_tilt": 182.0,
+        "forward_lean": 0.08,
+        "head_motion": 12.5,
+        "hand_motion": 18.3,
+        "timestamp": 1762630329.391495
+      },
+      "voice_metrics": {
+        "text": "I have a background in software engineering with three years of experience. I've worked on full-stack web applications using React and Node.js, and I'm passionate about creating user-friendly interfaces.",
+        "words_per_minute": 155,
+        "volume_db": -63.0,
+        "clarity_score": 0.82,
+        "timestamp": 1762630329.391516
+      }
+    }
+  ],
+  "agent_responses": [
+    {
+      "type": "opening",
+      "text": "Hello! Welcome to your practice interview. I'm Sarah, and I'm here to help you improve your interview skills. Let's start with an easy question: Tell me a bit about yourself and what brings you here today.",
+      "timestamp": "2025-11-08T14:32:01.634202"
+    },
+    {
+      "type": "feedback",
+      "question_number": 1,
+      "text": "Thank you for your response. Based on the metrics, you're doing well overall. Keep up the good work!",
+      "timestamp": "2025-11-08T14:32:09.392849"
+    }
+  ],
+  "final_evaluation": null
+}

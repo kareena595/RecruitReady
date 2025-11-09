@@ -1,0 +1,20 @@
+{
+  "session_id": "session_20251108_142346",
+  "start_time": "2025-11-08T14:23:46.397769",
+  "questions": [
+    {
+      "question_number": 1,
+      "question_text": "Hello! Welcome to your practice interview. I'm Sarah, and I'm here to help you improve your interview skills. Let's start with an easy question: Tell me a bit about yourself and what brings you here today.",
+      "timestamp": "2025-11-08T14:23:46.399011"
+    }
+  ],
+  "metrics_log": [],
+  "agent_responses": [
+    {
+      "type": "opening",
+      "text": "Hello! Welcome to your practice interview. I'm Sarah, and I'm here to help you improve your interview skills. Let's start with an easy question: Tell me a bit about yourself and what brings you here today.",
+      "timestamp": "2025-11-08T14:23:46.399021"
+    }
+  ],
+  "final_evaluation": null
+}
