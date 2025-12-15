@@ -84,7 +84,7 @@ The project follows a modular architecture with clear separation of concerns:
 
 ```bash
 git clone <repository-url>
-cd video_meeting_analyzer
+cd RecruitReady
 ```
 
 ### 2. Backend Setup
